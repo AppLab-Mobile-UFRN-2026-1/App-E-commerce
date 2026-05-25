@@ -1,3 +1,4 @@
+import 'package:applab_ecommerce/src/screens/products_screen.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -43,6 +44,10 @@ class _LoginScreenState extends State<LoginScreen> {
       ).showSnackBar(const SnackBar(content: Text('Credenciais inválidas')));
       return;
     }
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => const ProductsScreen()),
+    );
   }
 
   @override
