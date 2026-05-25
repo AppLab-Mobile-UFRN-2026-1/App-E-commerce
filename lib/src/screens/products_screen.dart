@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/sample_products.dart';
 import '../screens/login_screen.dart';
+import '../services/session_service.dart';
 import '../widgets/product_card.dart';
 
 class ProductsScreen extends StatelessWidget {
@@ -15,7 +16,13 @@ class ProductsScreen extends StatelessWidget {
         actions: [
           IconButton(
             tooltip: 'Sair',
-            onPressed: () {
+            onPressed: () async {
+              await SessionService().clearSession();
+
+              if (!context.mounted) {
+                return;
+              }
+
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
                 (route) => false,
