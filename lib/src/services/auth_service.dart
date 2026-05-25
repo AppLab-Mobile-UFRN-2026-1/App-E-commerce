@@ -35,7 +35,7 @@ class AuthService {
       }),
     );
 
-    if (response.statusCode != 200) {
+    if (response.statusCode < 200 || response.statusCode >= 300) {
       throw const AuthException('Credenciais inválidas');
     }
 
