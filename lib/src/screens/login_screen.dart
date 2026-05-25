@@ -1,4 +1,5 @@
 import 'package:applab_ecommerce/src/screens/products_screen.dart';
+import 'package:applab_ecommerce/src/widgets/app_text_field.dart';
 import 'package:flutter/material.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -68,57 +69,25 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(
                       fontSize: 30,
                       fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.onPrimary,
+                      color: Theme.of(context).colorScheme.primary,
                     ),
                   ),
                   SizedBox(height: 32),
-                  TextFormField(
+                  AppTextField(
                     controller: _userController,
+                    title: 'Usuário',
+                    hintText: 'Digite seu usuário',
+                    icon: Icons.person_outline,
                     validator: _requiredField,
-                    decoration: InputDecoration(
-                      hintText: 'Usuário',
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.white),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.secondary,
-                          width: 2,
-                        ),
-                      ),
-                    ),
                   ),
                   SizedBox(height: 16),
-                  TextFormField(
+                  AppTextField(
                     controller: _passwordController,
+                    title: 'Senha',
+                    hintText: 'Digite sua senha',
+                    icon: Icons.lock_outline,
                     validator: _requiredField,
                     obscureText: true,
-                    decoration: InputDecoration(
-                      hintText: 'Senha',
-                      filled: true,
-                      fillColor: Colors.white,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(color: Colors.white),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.secondary,
-                          width: 2,
-                        ),
-                      ),
-                    ),
                   ),
                   SizedBox(height: 16),
                   SizedBox(
