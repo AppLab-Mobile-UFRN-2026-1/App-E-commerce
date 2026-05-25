@@ -53,7 +53,6 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Theme.of(context).colorScheme.primary,
       body: Center(
         child: Padding(
           padding: EdgeInsets.all(16.0),
@@ -147,7 +146,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(
                       'Esqueceu a senha?',
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
+                        color: Theme.of(context).colorScheme.secondary,
                       ),
                     ),
                   ),
@@ -157,7 +156,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     child: Text(
                       "Não tem uma conta? Cadastre-se",
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onPrimary,
+                        color: Theme.of(context).colorScheme.secondary,
                       ),
                     ),
                   ),
