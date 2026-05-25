@@ -17,6 +17,10 @@ class AppTheme {
         secondary: secondaryColor,
         onSecondary: Colors.white,
       ),
+      appBarTheme: const AppBarTheme(
+        backgroundColor: primaryColor,
+        foregroundColor: Colors.white,
+      ),
     );
   }
 }

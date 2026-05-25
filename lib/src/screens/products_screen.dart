@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/sample_products.dart';
+import '../screens/login_screen.dart';
 import '../widgets/product_card.dart';
 
 class ProductsScreen extends StatelessWidget {
@@ -11,6 +12,18 @@ class ProductsScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('AppLab Ecommerce'),
+        actions: [
+          IconButton(
+            tooltip: 'Sair',
+            onPressed: () {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            },
+            icon: const Icon(Icons.logout),
+          ),
+        ],
       ),
       body: LayoutBuilder(
         builder: (context, constraints) {
