@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../models/product.dart';
 import '../screens/login_screen.dart';
+import '../services/cart_service.dart';
 import '../services/product_service.dart';
 import '../services/session_service.dart';
 import '../widgets/product_card.dart';
@@ -15,6 +16,7 @@ class ProductsScreen extends StatefulWidget {
 
 class _ProductsScreenState extends State<ProductsScreen> {
   final _productService = ProductService();
+  final _cartService = CartService();
   late Future<List<Product>> _productsFuture;
 
   @override
@@ -26,6 +28,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   @override
   void dispose() {
     _productService.dispose();
+    _cartService.dispose();
     super.dispose();
   }
 
@@ -36,6 +39,16 @@ class _ProductsScreenState extends State<ProductsScreen> {
   Future<void> _retryLoadProducts() async {
     setState(_loadProducts);
     await _productsFuture;
+  }
+
+  void _addProductToCart(Product product) {
+    _cartService.addProduct(product);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('${product.name} adicionado ao carrinho.'),
+      ),
+    );
   }
 
   @override
@@ -146,7 +159,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     mainAxisExtent: cardHeight,
                   ),
                   itemBuilder: (context, index) {
-                    return ProductCard(product: products[index]);
+                    final product = products[index];
+
+                    return ProductCard(
+                      product: product,
+                      onBuy: () {
+                        _addProductToCart(product);
+                      },
+                    );
                   },
                 ),
               );
