@@ -58,7 +58,9 @@ class _SplashScreenState extends State<SplashScreen> {
       }
 
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const ProductsScreen()),
+        MaterialPageRoute<void>(
+          builder: (_) => ProductsScreen(username: session.username),
+        ),
       );
     } catch (_) {
       await _sessionService.clearSession();
@@ -79,10 +81,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }

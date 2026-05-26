@@ -5,10 +5,7 @@ import '../widgets/cart_item_tile.dart';
 import '../widgets/cart_summary_bar.dart';
 
 class CartScreen extends StatefulWidget {
-  const CartScreen({
-    required this.cartService,
-    super.key,
-  });
+  const CartScreen({required this.cartService, super.key});
 
   final CartService cartService;
 
@@ -31,7 +28,7 @@ class _CartScreenState extends State<CartScreen> {
     try {
       await Future<void>.delayed(const Duration(seconds: 1));
 
-      widget.cartService.clear();
+      await widget.cartService.clear();
 
       if (!mounted) {
         return;
@@ -41,9 +38,7 @@ class _CartScreenState extends State<CartScreen> {
       final messenger = ScaffoldMessenger.of(context);
 
       messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Compra confirmada com sucesso.'),
-        ),
+        const SnackBar(content: Text('Compra confirmada com sucesso.')),
       );
 
       if (navigator.canPop()) {
@@ -55,9 +50,7 @@ class _CartScreenState extends State<CartScreen> {
       }
 
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Nao foi possivel confirmar a compra.'),
-        ),
+        const SnackBar(content: Text('Nao foi possivel confirmar a compra.')),
       );
     } finally {
       if (mounted) {
@@ -74,9 +67,7 @@ class _CartScreenState extends State<CartScreen> {
       animation: widget.cartService,
       builder: (context, _) {
         return Scaffold(
-          appBar: AppBar(
-            title: const Text('Meu Carrinho'),
-          ),
+          appBar: AppBar(title: const Text('Meu Carrinho')),
           body: widget.cartService.isEmpty
               ? const _EmptyCartView()
               : _CartContent(
@@ -116,14 +107,14 @@ class _CartContent extends StatelessWidget {
               return CartItemTile(
                 item: item,
                 isEnabled: !isCheckoutInProgress,
-                onIncrement: () {
-                  cartService.increment(item.product.id);
+                onIncrement: () async {
+                  await cartService.increment(item.product.id);
                 },
-                onDecrement: () {
-                  cartService.decrement(item.product.id);
+                onDecrement: () async {
+                  await cartService.decrement(item.product.id);
                 },
-                onRemove: () {
-                  cartService.remove(item.product.id);
+                onRemove: () async {
+                  await cartService.remove(item.product.id);
                 },
               );
             },
@@ -161,9 +152,9 @@ class _EmptyCartView extends StatelessWidget {
             Text(
               'Seu carrinho está vazio',
               textAlign: TextAlign.center,
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.bold,
-              ),
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             Text(

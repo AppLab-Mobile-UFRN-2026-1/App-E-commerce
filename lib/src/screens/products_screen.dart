@@ -9,7 +9,9 @@ import '../services/session_service.dart';
 import '../widgets/product_card.dart';
 
 class ProductsScreen extends StatefulWidget {
-  const ProductsScreen({super.key});
+  const ProductsScreen({required this.username, super.key});
+
+  final String username;
 
   @override
   State<ProductsScreen> createState() => _ProductsScreenState();
@@ -17,12 +19,15 @@ class ProductsScreen extends StatefulWidget {
 
 class _ProductsScreenState extends State<ProductsScreen> {
   final _productService = ProductService();
-  final _cartService = CartService();
+  late final CartService _cartService;
   late Future<List<Product>> _productsFuture;
+  late Future<void> _cartReady;
 
   @override
   void initState() {
     super.initState();
+    _cartService = CartService(username: widget.username);
+    _cartReady = _cartService.ready;
     _loadProducts();
   }
 
@@ -42,13 +47,16 @@ class _ProductsScreenState extends State<ProductsScreen> {
     await _productsFuture;
   }
 
-  void _addProductToCart(Product product) {
-    _cartService.addProduct(product);
+  Future<void> _addProductToCart(Product product) async {
+    await _cartService.ready;
+    await _cartService.addProduct(product);
+
+    if (!mounted) {
+      return;
+    }
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('${product.name} adicionado ao carrinho.'),
-      ),
+      SnackBar(content: Text('${product.name} adicionado ao carrinho.')),
     );
   }
 
@@ -138,67 +146,107 @@ class _ProductsScreenState extends State<ProductsScreen> {
             );
           }
 
-          final products = snapshot.data ?? const <Product>[];
-
-          if (products.isEmpty) {
-            return _ProductsStatusView(
-              icon: Icons.inventory_2_outlined,
-              title: 'Nenhum produto encontrado',
-              message:
-                  'A lista esta vazia no momento. Tente atualizar em instantes.',
-              child: Padding(
-                padding: const EdgeInsets.only(top: 20),
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    setState(_loadProducts);
-                  },
-                  icon: const Icon(Icons.refresh),
-                  label: const Text('Atualizar lista'),
-                ),
-              ),
-            );
-          }
-
-          return LayoutBuilder(
-            builder: (context, constraints) {
-              final width = constraints.maxWidth;
-              final crossAxisCount = width >= 1000
-                  ? 4
-                  : width >= 700
-                  ? 3
-                  : width >= 520
-                  ? 2
-                  : 1;
-              final cardHeight = width < 520 ? 430.0 : 410.0;
-
-              return RefreshIndicator(
-                onRefresh: _retryLoadProducts,
-                child: GridView.builder(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(16),
-                  itemCount: products.length,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    mainAxisExtent: cardHeight,
+          return FutureBuilder<void>(
+            future: _cartReady,
+            builder: (context, cartSnapshot) {
+              if (cartSnapshot.connectionState != ConnectionState.done) {
+                return const _ProductsStatusView(
+                  icon: Icons.shopping_cart_outlined,
+                  title: 'Restaurando carrinho',
+                  message: 'Estamos recuperando seus itens salvos.',
+                  child: Padding(
+                    padding: EdgeInsets.only(top: 16),
+                    child: CircularProgressIndicator(),
                   ),
-                  itemBuilder: (context, index) {
-                    final product = products[index];
+                );
+              }
 
-                    return ProductCard(
-                      product: product,
-                      onBuy: () {
-                        _addProductToCart(product);
-                      },
-                    );
-                  },
-                ),
+              final products = snapshot.data ?? const <Product>[];
+
+              return _ProductsGrid(
+                products: products,
+                onRetry: () {
+                  setState(_loadProducts);
+                },
+                onRefresh: _retryLoadProducts,
+                onBuy: _addProductToCart,
               );
             },
           );
         },
       ),
+    );
+  }
+}
+
+class _ProductsGrid extends StatelessWidget {
+  const _ProductsGrid({
+    required this.products,
+    required this.onRetry,
+    required this.onRefresh,
+    required this.onBuy,
+  });
+
+  final List<Product> products;
+  final VoidCallback onRetry;
+  final RefreshCallback onRefresh;
+  final Future<void> Function(Product product) onBuy;
+
+  @override
+  Widget build(BuildContext context) {
+    if (products.isEmpty) {
+      return _ProductsStatusView(
+        icon: Icons.inventory_2_outlined,
+        title: 'Nenhum produto encontrado',
+        message: 'A lista esta vazia no momento. Tente atualizar em instantes.',
+        child: Padding(
+          padding: const EdgeInsets.only(top: 20),
+          child: OutlinedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh),
+            label: const Text('Atualizar lista'),
+          ),
+        ),
+      );
+    }
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final width = constraints.maxWidth;
+        final crossAxisCount = width >= 1000
+            ? 4
+            : width >= 700
+            ? 3
+            : width >= 520
+            ? 2
+            : 1;
+        final cardHeight = width < 520 ? 430.0 : 410.0;
+
+        return RefreshIndicator(
+          onRefresh: onRefresh,
+          child: GridView.builder(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(16),
+            itemCount: products.length,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              mainAxisExtent: cardHeight,
+            ),
+            itemBuilder: (context, index) {
+              final product = products[index];
+
+              return ProductCard(
+                product: product,
+                onBuy: () async {
+                  await onBuy(product);
+                },
+              );
+            },
+          ),
+        );
+      },
     );
   }
 }

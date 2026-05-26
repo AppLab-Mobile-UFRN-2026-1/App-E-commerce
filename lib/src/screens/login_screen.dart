@@ -65,7 +65,7 @@ class _LoginScreenState extends State<LoginScreen> {
       }
 
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const ProductsScreen()),
+        MaterialPageRoute<void>(builder: (_) => ProductsScreen(username: user)),
       );
     } on AuthException catch (error) {
       if (!mounted) {
