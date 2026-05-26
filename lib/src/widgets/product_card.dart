@@ -18,8 +18,9 @@ class ProductCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            AspectRatio(
-              aspectRatio: 1,
+            SizedBox(
+              width: double.infinity,
+              height: 150,
               child: DecoratedBox(
                 decoration: BoxDecoration(
                   color: colorScheme.surfaceContainerHighest,

@@ -124,11 +124,14 @@ class _ProductsScreenState extends State<ProductsScreen> {
           return LayoutBuilder(
             builder: (context, constraints) {
               final width = constraints.maxWidth;
-              final crossAxisCount = width >= 900
+              final crossAxisCount = width >= 1000
                   ? 4
-                  : width >= 640
+                  : width >= 700
                   ? 3
-                  : 2;
+                  : width >= 520
+                  ? 2
+                  : 1;
+              final cardHeight = width < 520 ? 430.0 : 410.0;
 
               return RefreshIndicator(
                 onRefresh: _retryLoadProducts,
@@ -140,7 +143,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                     crossAxisCount: crossAxisCount,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
-                    childAspectRatio: width < 420 ? 0.58 : 0.68,
+                    mainAxisExtent: cardHeight,
                   ),
                   itemBuilder: (context, index) {
                     return ProductCard(product: products[index]);
