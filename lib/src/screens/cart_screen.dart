@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/cart_item.dart';
 import '../services/cart_service.dart';
 
-class CartScreen extends StatelessWidget {
+class CartScreen extends StatefulWidget {
   const CartScreen({
     required this.cartService,
     super.key,
@@ -12,17 +12,77 @@ class CartScreen extends StatelessWidget {
   final CartService cartService;
 
   @override
+  State<CartScreen> createState() => _CartScreenState();
+}
+
+class _CartScreenState extends State<CartScreen> {
+  bool _isCheckingOut = false;
+
+  Future<void> _confirmPurchase() async {
+    if (_isCheckingOut || widget.cartService.isEmpty) {
+      return;
+    }
+
+    setState(() {
+      _isCheckingOut = true;
+    });
+
+    try {
+      await Future<void>.delayed(const Duration(seconds: 1));
+
+      widget.cartService.clear();
+
+      if (!mounted) {
+        return;
+      }
+
+      final navigator = Navigator.of(context);
+      final messenger = ScaffoldMessenger.of(context);
+
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Compra confirmada com sucesso.'),
+        ),
+      );
+
+      if (navigator.canPop()) {
+        navigator.pop();
+      }
+    } catch (_) {
+      if (!mounted) {
+        return;
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Nao foi possivel confirmar a compra.'),
+        ),
+      );
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCheckingOut = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return AnimatedBuilder(
-      animation: cartService,
+      animation: widget.cartService,
       builder: (context, _) {
         return Scaffold(
           appBar: AppBar(
             title: const Text('Meu Carrinho'),
           ),
-          body: cartService.isEmpty
+          body: widget.cartService.isEmpty
               ? const _EmptyCartView()
-              : _CartContent(cartService: cartService),
+              : _CartContent(
+                  cartService: widget.cartService,
+                  isCheckoutInProgress: _isCheckingOut,
+                  onCheckout: _confirmPurchase,
+                ),
         );
       },
     );
@@ -30,9 +90,15 @@ class CartScreen extends StatelessWidget {
 }
 
 class _CartContent extends StatelessWidget {
-  const _CartContent({required this.cartService});
+  const _CartContent({
+    required this.cartService,
+    required this.isCheckoutInProgress,
+    required this.onCheckout,
+  });
 
   final CartService cartService;
+  final bool isCheckoutInProgress;
+  final VoidCallback onCheckout;
 
   @override
   Widget build(BuildContext context) {
@@ -48,6 +114,7 @@ class _CartContent extends StatelessWidget {
 
               return _CartItemCard(
                 item: item,
+                isEnabled: !isCheckoutInProgress,
                 onIncrement: () {
                   cartService.increment(item.product.id);
                 },
@@ -61,7 +128,11 @@ class _CartContent extends StatelessWidget {
             },
           ),
         ),
-        _CartTotalBar(cartService: cartService),
+        _CartTotalBar(
+          cartService: cartService,
+          isCheckoutInProgress: isCheckoutInProgress,
+          onCheckout: onCheckout,
+        ),
       ],
     );
   }
@@ -70,12 +141,14 @@ class _CartContent extends StatelessWidget {
 class _CartItemCard extends StatelessWidget {
   const _CartItemCard({
     required this.item,
+    required this.isEnabled,
     required this.onIncrement,
     required this.onDecrement,
     required this.onRemove,
   });
 
   final CartItem item;
+  final bool isEnabled;
   final VoidCallback onIncrement;
   final VoidCallback onDecrement;
   final VoidCallback onRemove;
@@ -83,6 +156,7 @@ class _CartItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final canDecrement = isEnabled && item.quantity > 1;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -145,7 +219,7 @@ class _CartItemCard extends StatelessWidget {
                     children: [
                       IconButton.outlined(
                         tooltip: 'Diminuir quantidade',
-                        onPressed: onDecrement,
+                        onPressed: canDecrement ? onDecrement : null,
                         icon: const Icon(Icons.remove),
                       ),
                       SizedBox(
@@ -158,7 +232,7 @@ class _CartItemCard extends StatelessWidget {
                       ),
                       IconButton.outlined(
                         tooltip: 'Aumentar quantidade',
-                        onPressed: onIncrement,
+                        onPressed: isEnabled ? onIncrement : null,
                         icon: const Icon(Icons.add),
                       ),
                     ],
@@ -171,7 +245,7 @@ class _CartItemCard extends StatelessWidget {
               children: [
                 IconButton(
                   tooltip: 'Remover item',
-                  onPressed: onRemove,
+                  onPressed: isEnabled ? onRemove : null,
                   icon: const Icon(Icons.delete_outline),
                 ),
                 const SizedBox(height: 20),
@@ -191,9 +265,15 @@ class _CartItemCard extends StatelessWidget {
 }
 
 class _CartTotalBar extends StatelessWidget {
-  const _CartTotalBar({required this.cartService});
+  const _CartTotalBar({
+    required this.cartService,
+    required this.isCheckoutInProgress,
+    required this.onCheckout,
+  });
 
   final CartService cartService;
+  final bool isCheckoutInProgress;
+  final VoidCallback onCheckout;
 
   @override
   Widget build(BuildContext context) {
@@ -237,15 +317,14 @@ class _CartTotalBar extends StatelessWidget {
                 ),
               ),
               ElevatedButton(
-                onPressed: () {
-                  cartService.clear();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Compra confirmada com sucesso.'),
-                    ),
-                  );
-                },
-                child: const Text('Confirmar compra'),
+                onPressed: isCheckoutInProgress ? null : onCheckout,
+                child: isCheckoutInProgress
+                    ? const SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Confirmar compra'),
               ),
             ],
           ),
