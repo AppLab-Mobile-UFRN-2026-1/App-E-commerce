@@ -3,9 +3,14 @@ import 'package:flutter/material.dart';
 import '../models/product.dart';
 
 class ProductCard extends StatelessWidget {
-  const ProductCard({required this.product, super.key});
+  const ProductCard({
+    required this.product,
+    required this.onBuy,
+    super.key,
+  });
 
   final Product product;
+  final VoidCallback onBuy;
 
   @override
   Widget build(BuildContext context) {
@@ -83,7 +88,7 @@ class ProductCard extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: onBuy,
                 child: const Text('Comprar'),
               ),
             ),
