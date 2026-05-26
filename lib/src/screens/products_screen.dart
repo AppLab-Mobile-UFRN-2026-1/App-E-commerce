@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../models/product.dart';
+import '../screens/cart_screen.dart';
 import '../screens/login_screen.dart';
 import '../services/cart_service.dart';
 import '../services/product_service.dart';
@@ -57,6 +58,30 @@ class _ProductsScreenState extends State<ProductsScreen> {
       appBar: AppBar(
         title: const Text('AppLab Ecommerce'),
         actions: [
+          // Ícone do Carrinho com Badge Reativo
+          ListenableBuilder(
+            listenable: _cartService,
+            builder: (context, _) {
+              final totalItems = _cartService.totalItems;
+
+              return Badge(
+                isLabelVisible: totalItems > 0,
+                label: Text(totalItems.toString()),
+                offset: const Offset(-8, 8),
+                child: IconButton(
+                  tooltip: 'Ver Carrinho',
+                  icon: const Icon(Icons.shopping_cart_outlined),
+                  onPressed: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => CartScreen(cartService: _cartService),
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
           IconButton(
             tooltip: 'Sair',
             onPressed: () async {
