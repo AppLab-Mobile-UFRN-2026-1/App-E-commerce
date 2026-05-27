@@ -1,0 +1,140 @@
+import 'package:applab_ecommerce/src/screens/products_screen.dart';
+import 'package:applab_ecommerce/src/widgets/app_text_field.dart';
+import 'package:flutter/material.dart';
+
+class LoginScreen extends StatefulWidget {
+  const LoginScreen({super.key});
+
+  @override
+  State<LoginScreen> createState() => _LoginScreenState();
+}
+
+class _LoginScreenState extends State<LoginScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _userController = TextEditingController();
+  final _passwordController = TextEditingController();
+
+  @override
+  void dispose() {
+    _userController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  String? _requiredField(String? value) {
+    if (value == null || value.trim().isEmpty) {
+      return 'Campo obrigatório';
+    }
+
+    return null;
+  }
+
+  void _submit() {
+    final isValidForm = _formKey.currentState?.validate() ?? false;
+
+    if (!isValidForm) {
+      return;
+    }
+
+    final user = _userController.text.trim();
+    final password = _passwordController.text;
+
+    if (user != 'admin' || password != '123456') {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Credenciais inválidas')));
+      return;
+    }
+
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => const ProductsScreen()),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Padding(
+          padding: EdgeInsets.all(16.0),
+          child: SizedBox(
+            width: 300,
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'AppLab E-commerce',
+                    style: TextStyle(
+                      fontSize: 30,
+                      fontWeight: FontWeight.bold,
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                  ),
+                  SizedBox(height: 32),
+                  AppTextField(
+                    controller: _userController,
+                    title: 'Usuário',
+                    hintText: 'Digite seu usuário',
+                    icon: Icons.person_outline,
+                    validator: _requiredField,
+                  ),
+                  SizedBox(height: 16),
+                  AppTextField(
+                    controller: _passwordController,
+                    title: 'Senha',
+                    hintText: 'Digite sua senha',
+                    icon: Icons.lock_outline,
+                    validator: _requiredField,
+                    obscureText: true,
+                  ),
+                  SizedBox(height: 16),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _submit,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(
+                          context,
+                        ).colorScheme.secondary,
+                      ),
+                      child: Text(
+                        'Login',
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSecondary,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 20),
+                  TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      'Esqueceu a senha?',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
+                  ),
+                  SizedBox(height: 8),
+                  TextButton(
+                    onPressed: () {},
+                    child: Text(
+                      "Não tem uma conta? Cadastre-se",
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
