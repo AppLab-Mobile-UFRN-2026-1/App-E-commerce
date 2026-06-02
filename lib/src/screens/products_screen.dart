@@ -1,11 +1,42 @@
 import 'package:flutter/material.dart';
 
-import '../data/sample_products.dart';
+import '../models/product.dart';
 import '../screens/login_screen.dart';
+import '../services/product_service.dart';
+import '../services/session_service.dart';
 import '../widgets/product_card.dart';
 
-class ProductsScreen extends StatelessWidget {
+class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
+
+  @override
+  State<ProductsScreen> createState() => _ProductsScreenState();
+}
+
+class _ProductsScreenState extends State<ProductsScreen> {
+  final _productService = ProductService();
+  late Future<List<Product>> _productsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProducts();
+  }
+
+  @override
+  void dispose() {
+    _productService.dispose();
+    super.dispose();
+  }
+
+  void _loadProducts() {
+    _productsFuture = _productService.fetchProducts();
+  }
+
+  Future<void> _retryLoadProducts() async {
+    setState(_loadProducts);
+    await _productsFuture;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +46,13 @@ class ProductsScreen extends StatelessWidget {
         actions: [
           IconButton(
             tooltip: 'Sair',
-            onPressed: () {
+            onPressed: () async {
+              await SessionService().clearSession();
+
+              if (!context.mounted) {
+                return;
+              }
+
               Navigator.of(context).pushAndRemoveUntil(
                 MaterialPageRoute<void>(builder: (_) => const LoginScreen()),
                 (route) => false,
@@ -25,29 +62,149 @@ class ProductsScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          final width = constraints.maxWidth;
-          final crossAxisCount = width >= 900
-              ? 4
-              : width >= 640
-                  ? 3
-                  : 2;
+      body: FutureBuilder<List<Product>>(
+        future: _productsFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState != ConnectionState.done) {
+            return const _ProductsStatusView(
+              icon: Icons.shopping_bag_outlined,
+              title: 'Carregando produtos',
+              message: 'Estamos buscando os itens disponiveis para voce.',
+              child: Padding(
+                padding: EdgeInsets.only(top: 16),
+                child: CircularProgressIndicator(),
+              ),
+            );
+          }
 
-          return GridView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: sampleProducts.length,
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount, // quantidade de colunas
-              crossAxisSpacing: 16, // espaco horizontal entre os cards
-              mainAxisSpacing: 16, // espaco vertical entre os cards
-              childAspectRatio: width < 420 ? 0.72 : 0.82, // largura / altura
-            ),
-            itemBuilder: (context, index) {
-              return ProductCard(product: sampleProducts[index]);
+          if (snapshot.hasError) {
+            final errorMessage = switch (snapshot.error) {
+              final ProductServiceException error => error.message,
+              _ => 'Não foi possível carregar os produtos.',
+            };
+
+            return _ProductsStatusView(
+              icon: Icons.wifi_off_rounded,
+              title: 'Falha ao carregar a vitrine',
+              message: errorMessage,
+              child: Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    setState(_loadProducts);
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Tentar novamente'),
+                ),
+              ),
+            );
+          }
+
+          final products = snapshot.data ?? const <Product>[];
+
+          if (products.isEmpty) {
+            return _ProductsStatusView(
+              icon: Icons.inventory_2_outlined,
+              title: 'Nenhum produto encontrado',
+              message:
+                  'A lista esta vazia no momento. Tente atualizar em instantes.',
+              child: Padding(
+                padding: const EdgeInsets.only(top: 20),
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    setState(_loadProducts);
+                  },
+                  icon: const Icon(Icons.refresh),
+                  label: const Text('Atualizar lista'),
+                ),
+              ),
+            );
+          }
+
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              final width = constraints.maxWidth;
+              final crossAxisCount = width >= 1000
+                  ? 4
+                  : width >= 700
+                  ? 3
+                  : width >= 520
+                  ? 2
+                  : 1;
+              final cardHeight = width < 520 ? 430.0 : 410.0;
+
+              return RefreshIndicator(
+                onRefresh: _retryLoadProducts,
+                child: GridView.builder(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  itemCount: products.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    mainAxisExtent: cardHeight,
+                  ),
+                  itemBuilder: (context, index) {
+                    return ProductCard(product: products[index]);
+                  },
+                ),
+              );
             },
           );
         },
+      ),
+    );
+  }
+}
+
+class _ProductsStatusView extends StatelessWidget {
+  const _ProductsStatusView({
+    required this.icon,
+    required this.title,
+    required this.message,
+    this.child,
+  });
+
+  final IconData icon;
+  final String title;
+  final String message;
+  final Widget? child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 320),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 52, color: colorScheme.primary),
+              const SizedBox(height: 16),
+              Text(
+                title,
+                textAlign: TextAlign.center,
+                style: textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: textTheme.bodyMedium?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              child ?? const SizedBox.shrink(),
+            ],
+          ),
+        ),
       ),
     );
   }

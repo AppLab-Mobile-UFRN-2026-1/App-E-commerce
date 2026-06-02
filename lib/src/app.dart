@@ -1,4 +1,4 @@
-import 'package:applab_ecommerce/src/screens/login_screen.dart';
+import 'package:applab_ecommerce/src/screens/splash_screen.dart';
 import 'package:applab_ecommerce/src/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 
@@ -10,7 +10,7 @@ class AppLabEcommerceApp extends StatelessWidget {
     return MaterialApp(
       theme: AppTheme.light,
       debugShowCheckedModeBanner: false,
-      home: const LoginScreen(),
+      home: const SplashScreen(),
     );
   }
 }
