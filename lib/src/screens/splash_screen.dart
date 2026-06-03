@@ -12,6 +12,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  static const _minimumLoadingDuration = Duration(seconds: 3);
+
   final _authService = AuthService();
   final _sessionService = SessionService();
 
@@ -28,6 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkSession() async {
+    final loadingDelay = Future<void>.delayed(_minimumLoadingDuration);
     final session = await _sessionService.getSession();
 
     if (!mounted) {
@@ -35,6 +38,12 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     if (session == null) {
+      await loadingDelay;
+
+      if (!mounted) {
+        return;
+      }
+
       _goToLogin();
       return;
     }
@@ -53,15 +62,20 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
       );
 
+      await loadingDelay;
+
       if (!mounted) {
         return;
       }
 
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(builder: (_) => const ProductsScreen()),
+        MaterialPageRoute<void>(
+          builder: (_) => ProductsScreen(username: session.username),
+        ),
       );
     } catch (_) {
       await _sessionService.clearSession();
+      await loadingDelay;
 
       if (!mounted) {
         return;
@@ -79,10 +93,6 @@ class _SplashScreenState extends State<SplashScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
-      body: Center(
-        child: CircularProgressIndicator(),
-      ),
-    );
+    return const Scaffold(body: Center(child: CircularProgressIndicator()));
   }
 }
