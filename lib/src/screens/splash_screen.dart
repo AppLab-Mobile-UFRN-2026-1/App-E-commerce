@@ -12,6 +12,8 @@ class SplashScreen extends StatefulWidget {
 }
 
 class _SplashScreenState extends State<SplashScreen> {
+  static const _minimumLoadingDuration = Duration(seconds: 3);
+
   final _authService = AuthService();
   final _sessionService = SessionService();
 
@@ -28,6 +30,7 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkSession() async {
+    final loadingDelay = Future<void>.delayed(_minimumLoadingDuration);
     final session = await _sessionService.getSession();
 
     if (!mounted) {
@@ -35,6 +38,12 @@ class _SplashScreenState extends State<SplashScreen> {
     }
 
     if (session == null) {
+      await loadingDelay;
+
+      if (!mounted) {
+        return;
+      }
+
       _goToLogin();
       return;
     }
@@ -53,6 +62,8 @@ class _SplashScreenState extends State<SplashScreen> {
         ),
       );
 
+      await loadingDelay;
+
       if (!mounted) {
         return;
       }
@@ -64,6 +75,7 @@ class _SplashScreenState extends State<SplashScreen> {
       );
     } catch (_) {
       await _sessionService.clearSession();
+      await loadingDelay;
 
       if (!mounted) {
         return;
