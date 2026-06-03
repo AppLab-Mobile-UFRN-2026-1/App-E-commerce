@@ -18,6 +18,8 @@ class ProductsScreen extends StatefulWidget {
 }
 
 class _ProductsScreenState extends State<ProductsScreen> {
+  static const _minimumStatusDuration = Duration(seconds: 2);
+
   final _productService = ProductService();
   late final CartService _cartService;
   late Future<List<Product>> _productsFuture;
@@ -27,7 +29,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   void initState() {
     super.initState();
     _cartService = CartService(username: widget.username);
-    _cartReady = _cartService.ready;
+    _cartReady = _withMinimumStatusDuration(_cartService.ready);
     _loadProducts();
   }
 
@@ -39,7 +41,19 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   void _loadProducts() {
-    _productsFuture = _productService.fetchProducts();
+    _productsFuture = _withMinimumStatusDuration(
+      _productService.fetchProducts(),
+    );
+  }
+
+  Future<T> _withMinimumStatusDuration<T>(Future<T> future) async {
+    final loadingDelay = Future<void>.delayed(_minimumStatusDuration);
+
+    try {
+      return await future;
+    } finally {
+      await loadingDelay;
+    }
   }
 
   Future<void> _retryLoadProducts() async {
