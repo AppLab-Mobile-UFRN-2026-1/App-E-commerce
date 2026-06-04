@@ -3,11 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/product.dart';
 
 class ProductCard extends StatelessWidget {
-  const ProductCard({
-    required this.product,
-    required this.onBuy,
-    super.key,
-  });
+  const ProductCard({required this.product, required this.onBuy, super.key});
 
   final Product product;
   final VoidCallback onBuy;
@@ -15,6 +11,7 @@ class ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final hasRating = product.ratingRate != null || product.ratingCount != null;
 
     return Card(
       clipBehavior: Clip.antiAlias,
@@ -67,6 +64,13 @@ class ProductCard extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
+            if (hasRating) ...[
+              const SizedBox(height: 8),
+              _ProductRating(
+                ratingRate: product.ratingRate,
+                ratingCount: product.ratingCount,
+              ),
+            ],
             const SizedBox(height: 8),
             Expanded(
               child: Text(
@@ -95,6 +99,36 @@ class ProductCard extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ProductRating extends StatelessWidget {
+  const _ProductRating({required this.ratingRate, required this.ratingCount});
+
+  final double? ratingRate;
+  final int? ratingCount;
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final rateLabel = ratingRate?.toStringAsFixed(1);
+    final countLabel = ratingCount == null ? null : '($ratingCount)';
+
+    return Row(
+      children: [
+        Icon(Icons.star_rounded, size: 18, color: Colors.amber.shade700),
+        const SizedBox(width: 4),
+        Text(
+          [?rateLabel, ?countLabel].join(' '),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }
